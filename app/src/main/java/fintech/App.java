@@ -2,6 +2,7 @@ package fintech;
 
 import static java.util.stream.Collectors.*;
 
+import fintech.models.Weather;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -65,8 +66,9 @@ public class App {
     }
 
     private static Map<Integer, List<Double>> getTemperatureListById(List<Weather> weatherList) {
-        return weatherList.stream().collect(groupingBy(
-                Weather::getId, mapping(Weather::getTemperatureInCelsius, toList())));
+        return weatherList.stream().collect(
+                groupingBy(Weather::getRegionId,
+                        mapping(Weather::getTemperatureInCelsius, toList())));
     }
 
     private static Map<Double, List<Weather>> getTemperatureToWeatherList(List<Weather> weatherList) {

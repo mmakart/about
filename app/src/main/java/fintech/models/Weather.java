@@ -1,11 +1,11 @@
-package fintech;
+package fintech.models;
 
 import java.time.LocalDateTime;
 import lombok.Value;
 
 @Value
 public class Weather {
-    int id;
+    int regionId;
     String regionName;
     double temperatureInCelsius;
     LocalDateTime dateAndTime;

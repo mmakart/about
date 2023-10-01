@@ -19,6 +19,12 @@ repositories {
 }
 
 dependencies {
+    implementation("org.springframework.boot:spring-boot-starter-web:3.1.4")
+    implementation("org.springframework:spring-core:6.0.12")
+    implementation("org.springframework:spring-context:6.0.12")
+    implementation("org.springframework:spring-web:6.0.12")
+    implementation("org.springframework:spring-webmvc:6.0.12")
+
     // Use JUnit Jupiter for testing.
     testImplementation("org.junit.jupiter:junit-jupiter:5.9.3")
 
@@ -37,7 +43,7 @@ java {
 
 application {
     // Define the main class for the application.
-    mainClass.set("fintech.App")
+    mainClass.set("fintech.FintechApplication")
 }
 
 tasks.named<Test>("test") {
@@ -56,6 +62,6 @@ tasks.register<Jar>("uberJar") {
 
 tasks.jar {
     manifest {
-        attributes["Main-Class"] = "fintech.App"
+        attributes["Main-Class"] = "fintech.FintechApplication"
     }
 }
