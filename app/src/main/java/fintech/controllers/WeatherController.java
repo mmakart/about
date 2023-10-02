@@ -26,11 +26,10 @@ public class WeatherController {
     private final WeatherDao weatherDao;
 
     @GetMapping("/{region_id}")
-    public Double getLastTemperatureInRegion(@PathVariable("region_id") int regionId) {
+    public List<Weather> getTodaysWeatherListInRegion(@PathVariable("region_id") int regionId) {
         boolean areThereWeatherItemsWithGivenRegionId = weatherDao.areThereWeatherItemsWithId(regionId);
         if (areThereWeatherItemsWithGivenRegionId) {
-            return weatherDao.getLastTemperatureInRegionByDate(regionId,
-                    LocalDate.now());
+            return weatherDao.getWeatherListInRegionByDate(regionId, LocalDate.now());
         } else {
             throw new WeatherNotFoundException(
                     "No weather items has been found with given region id (" + regionId +

@@ -53,6 +53,14 @@ public class WeatherDao {
                 .orElse(null);
     }
 
+    public List<Weather> getWeatherListInRegionByDate(int regionId,
+            LocalDate date) {
+        return weatherList.stream()
+                .filter(weather -> weather != null && weather.getRegionId() == regionId &&
+                        weather.getDateAndTime().toLocalDate().equals(date))
+                .toList();
+    }
+
     public void addWeather(Weather weather) {
         weatherList.add(weather);
     }
