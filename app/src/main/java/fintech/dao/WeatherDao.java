@@ -6,8 +6,6 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
-import java.util.NoSuchElementException;
-import java.util.Objects;
 import java.util.function.Predicate;
 import org.springframework.stereotype.Component;
 
@@ -53,6 +51,14 @@ public class WeatherDao {
                 .map(Weather::getTemperatureInCelsius)
                 .findFirst()
                 .orElse(null);
+    }
+
+    public List<Weather> getWeatherListInRegionByDate(int regionId,
+            LocalDate date) {
+        return weatherList.stream()
+                .filter(weather -> weather != null && weather.getRegionId() == regionId &&
+                        weather.getDateAndTime().toLocalDate().equals(date))
+                .toList();
     }
 
     public void addWeather(Weather weather) {

@@ -25,6 +25,8 @@ dependencies {
     implementation("org.springframework:spring-web:6.0.12")
     implementation("org.springframework:spring-webmvc:6.0.12")
 
+    implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:2.1.0")
+
     // Use JUnit Jupiter for testing.
     testImplementation("org.junit.jupiter:junit-jupiter:5.9.3")
 
