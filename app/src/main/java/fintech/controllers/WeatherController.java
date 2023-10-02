@@ -1,6 +1,8 @@
 package fintech.controllers;
 
 import fintech.dao.WeatherDao;
+import fintech.exceptions.IncorrectDateAndTimeFormatException;
+import fintech.exceptions.WeatherNotFoundException;
 import fintech.models.Weather;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -8,7 +10,6 @@ import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 import java.util.List;
 import lombok.RequiredArgsConstructor;
-import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -17,7 +18,6 @@ import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
-import org.springframework.web.server.ResponseStatusException;
 
 @RestController
 @RequestMapping("/api/weather")
@@ -32,8 +32,7 @@ public class WeatherController {
             return weatherDao.getLastTemperatureInRegionByDate(regionId,
                     LocalDate.now());
         } else {
-            throw new ResponseStatusException(
-                    HttpStatus.NOT_FOUND,
+            throw new WeatherNotFoundException(
                     "No weather items has been found with given region id (" + regionId +
                             ")");
         }
@@ -53,8 +52,7 @@ public class WeatherController {
             weather = new Weather(regionId, regionName, temperature, dateAndTime);
             weatherDao.addWeather(weather);
         } catch (DateTimeParseException e) {
-            throw new ResponseStatusException(
-                    HttpStatus.BAD_REQUEST,
+            throw new IncorrectDateAndTimeFormatException(
                     "Weather haven't been added due to incorrect time and date format",
                     e);
         }
@@ -70,8 +68,7 @@ public class WeatherController {
 
         boolean areThereWeatherItemsWithGivenRegionId = weatherDao.areThereWeatherItemsWithId(regionId);
         if (!areThereWeatherItemsWithGivenRegionId) {
-            throw new ResponseStatusException(
-                    HttpStatus.BAD_REQUEST,
+            throw new WeatherNotFoundException(
                     "Weather can't be updated or added because there are no such region id (" +
                             regionId +
                             ") and there are no corresponding region name in database");
@@ -94,8 +91,7 @@ public class WeatherController {
                         temperature, regionId, dateAndTime);
             }
         } catch (DateTimeParseException e) {
-            throw new ResponseStatusException(
-                    HttpStatus.BAD_REQUEST,
+            throw new IncorrectDateAndTimeFormatException(
                     "Weather can't be updated or added due to incorrect time and date format",
                     e);
         }
