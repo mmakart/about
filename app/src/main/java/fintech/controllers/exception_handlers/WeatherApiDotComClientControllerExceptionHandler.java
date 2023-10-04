@@ -40,7 +40,7 @@ public class WeatherApiDotComClientControllerExceptionHandler {
     @ResponseStatus(HttpStatus.BAD_REQUEST)
     public ResponseEntity<String> handleIncorrectBulkRequestException(
             WebClientIncorrectBulkRequestException ex) {
-        return ResponseEntity.status(HttpStatus.FORBIDDEN).body(ex.getMessage());
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(ex.getMessage());
     }
 
     @ExceptionHandler(WebClientInternalErrorException.class)
