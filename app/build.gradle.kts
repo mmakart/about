@@ -24,6 +24,7 @@ dependencies {
     implementation("org.springframework:spring-context:6.0.12")
     implementation("org.springframework:spring-web:6.0.12")
     implementation("org.springframework:spring-webmvc:6.0.12")
+    implementation("org.springframework:spring-webflux:6.0.12")
 
     implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:2.1.0")
 
