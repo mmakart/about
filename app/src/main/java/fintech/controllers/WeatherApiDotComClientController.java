@@ -1,5 +1,6 @@
 package fintech.controllers;
 
+import fintech.config.WeatherApiDotComProperties;
 import fintech.dto.WeatherApiDotComErrorMessageDto;
 import fintech.exceptions.WebClientApiKeyDisabledException;
 import fintech.exceptions.WebClientIncorrectBulkRequestException;
@@ -9,7 +10,6 @@ import fintech.exceptions.WebClientNoAccessToResourceForSubscriptionPlanExceptio
 import fintech.exceptions.WebClientQuotaPerMonthExceededException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -27,13 +27,12 @@ public class WeatherApiDotComClientController {
     @Qualifier("weatherApiDotComClient")
     private final WebClient client;
 
-    @Value("${weather_api_dot_com.auth_key}")
-    private String authKey;
+    private final WeatherApiDotComProperties props;
 
     @GetMapping("/now/{city}")
     public Mono<Object> getCurrentWeatherForCity(@PathVariable("city") String city) {
         return client.get()
-                .uri(uriBuilder -> uriBuilder.queryParam("key", authKey)
+                .uri(uriBuilder -> uriBuilder.queryParam("key", props.getAuthKey())
                         .queryParam("q", city)
                         .build())
                 .accept(MediaType.APPLICATION_JSON)

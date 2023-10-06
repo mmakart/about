@@ -20,6 +20,7 @@ repositories {
 
 dependencies {
     implementation("org.springframework.boot:spring-boot-starter-web:3.1.4")
+    implementation("org.springframework.boot:spring-boot-starter-validation:3.1.4")
     implementation("org.springframework:spring-core:6.0.12")
     implementation("org.springframework:spring-context:6.0.12")
     implementation("org.springframework:spring-web:6.0.12")
