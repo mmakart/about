@@ -6,8 +6,8 @@ import lombok.Data;
 public class WeatherApiDotComErrorMessageDto {
     @Data
     public static class Error {
-        int code;
-        String message;
+        private int code;
+        private String message;
     }
 
     private Error error;

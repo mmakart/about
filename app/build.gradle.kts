@@ -28,6 +28,8 @@ dependencies {
 
     implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:2.1.0")
 
+    implementation("io.github.resilience4j:resilience4j-ratelimiter:2.1.0")
+
     // Use JUnit Jupiter for testing.
     testImplementation("org.junit.jupiter:junit-jupiter:5.9.3")
 
