@@ -8,6 +8,8 @@ import fintech.exceptions.WebClientInternalErrorException;
 import fintech.exceptions.WebClientLocationNotFoundException;
 import fintech.exceptions.WebClientNoAccessToResourceForSubscriptionPlanException;
 import fintech.exceptions.WebClientQuotaPerMonthExceededException;
+import io.github.resilience4j.ratelimiter.RateLimiter;
+import java.util.function.Function;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.http.MediaType;
@@ -29,18 +31,25 @@ public class WeatherApiDotComClientController {
 
     private final WeatherApiDotComProperties props;
 
+    // @Qualifier("standardWebApiDotComClientRateLimiter")
+    @Qualifier("testWebApiDotComClientRateLimiter")
+    private final RateLimiter rateLimiter;
+
     @GetMapping("/now/{city}")
     public Mono<Object> getCurrentWeatherForCity(@PathVariable("city") String city) {
-        return client.get()
-                .uri(uriBuilder -> uriBuilder.queryParam("key", props.getAuthKey())
-                        .queryParam("q", city)
-                        .build())
-                .accept(MediaType.APPLICATION_JSON)
-                .retrieve()
-                .onStatus(
-                        httpCode -> httpCode.is4xxClientError() || httpCode.is5xxServerError(),
-                        WeatherApiDotComClientController::convertErrorResponseToException)
-                .bodyToMono(Object.class);
+        Function<String, Mono<Object>> getCurrentWeatherForCityRateLimitedFunction = RateLimiter.decorateFunction(
+                rateLimiter,
+                innerCity -> client.get()
+                        .uri(uriBuilder -> uriBuilder.queryParam("key", props.getAuthKey())
+                                .queryParam("q", innerCity)
+                                .build())
+                        .accept(MediaType.APPLICATION_JSON)
+                        .retrieve()
+                        .onStatus(httpCode -> httpCode.is4xxClientError() ||
+                                httpCode.is5xxServerError(),
+                                WeatherApiDotComClientController::convertErrorResponseToException)
+                        .bodyToMono(Object.class));
+        return getCurrentWeatherForCityRateLimitedFunction.apply(city);
     }
 
     private static Mono<Exception> convertErrorResponseToException(ClientResponse response) {
