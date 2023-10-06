@@ -21,7 +21,7 @@ public class MainConfig {
                 .build();
     }
 
-    // @Bean
+    @Bean
     public RateLimiter standardWebApiDotComClientRateLimiter() {
         RateLimiterConfig config = RateLimiterConfig.custom()
                 .limitRefreshPeriod(Duration.ofDays(30))
@@ -31,20 +31,7 @@ public class MainConfig {
 
         RateLimiterRegistry registry = RateLimiterRegistry.of(config);
 
-        return registry.rateLimiter("standard_rate_limiter");
-    }
-
-    @Bean
-    public RateLimiter testWebApiDotComClientRateLimiter() {
-        RateLimiterConfig config = RateLimiterConfig.custom()
-                .limitRefreshPeriod(Duration.ofMinutes(1))
-                .limitForPeriod(3)
-                .timeoutDuration(Duration.ofSeconds(5))
-                .build();
-
-        RateLimiterRegistry registry = RateLimiterRegistry.of(config);
-
-        RateLimiter rateLimiter = registry.rateLimiter("test_rate_limiter");
+        RateLimiter rateLimiter = registry.rateLimiter("standard_rate_limiter");
         rateLimiter.getEventPublisher().onFailure(event -> {
             throw new WebClientLimitRateExceededException(
                     HttpStatus.TOO_MANY_REQUESTS,

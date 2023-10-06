@@ -26,8 +26,7 @@ public class WeatherApiDotComClientController {
 
     private final WeatherApiDotComProperties props;
 
-    // @Qualifier("standardWebApiDotComClientRateLimiter")
-    @Qualifier("testWebApiDotComClientRateLimiter")
+    @Qualifier("standardWebApiDotComClientRateLimiter")
     private final RateLimiter rateLimiter;
 
     @GetMapping("/now/{city}")
