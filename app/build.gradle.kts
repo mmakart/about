@@ -20,12 +20,17 @@ repositories {
 
 dependencies {
     implementation("org.springframework.boot:spring-boot-starter-web:3.1.4")
+    implementation("org.springframework.boot:spring-boot-starter-validation:3.1.4")
     implementation("org.springframework:spring-core:6.0.12")
     implementation("org.springframework:spring-context:6.0.12")
     implementation("org.springframework:spring-web:6.0.12")
     implementation("org.springframework:spring-webmvc:6.0.12")
+    implementation("org.springframework:spring-webflux:6.0.12")
 
     implementation("org.springdoc:springdoc-openapi-starter-webmvc-ui:2.1.0")
+
+    implementation("io.github.resilience4j:resilience4j-ratelimiter:2.1.0")
+    implementation("io.github.resilience4j:resilience4j-core:2.1.0")
 
     // Use JUnit Jupiter for testing.
     testImplementation("org.junit.jupiter:junit-jupiter:5.9.3")
