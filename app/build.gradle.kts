@@ -9,6 +9,7 @@ plugins {
     // Apply the application plugin to add support for building a CLI application in Java.
     application
     java
+    id("org.liquibase.gradle") version "2.2.0"
 }
 
 version="1.0.0"
@@ -21,6 +22,8 @@ repositories {
 dependencies {
     implementation("org.springframework.boot:spring-boot-starter-web:3.1.4")
     implementation("org.springframework.boot:spring-boot-starter-validation:3.1.4")
+    implementation("org.springframework.boot:spring-boot-starter-data-jdbc:3.1.4")
+    implementation("org.springframework.boot:spring-boot-starter-data-jpa:3.1.4")
     implementation("org.springframework:spring-core:6.0.12")
     implementation("org.springframework:spring-context:6.0.12")
     implementation("org.springframework:spring-web:6.0.12")
@@ -31,6 +34,9 @@ dependencies {
 
     implementation("io.github.resilience4j:resilience4j-ratelimiter:2.1.0")
     implementation("io.github.resilience4j:resilience4j-core:2.1.0")
+
+    testImplementation("com.h2database:h2:2.2.224")
+    implementation("io.quarkus:quarkus-jdbc-h2:3.5.0.CR1")
 
     // Use JUnit Jupiter for testing.
     testImplementation("org.junit.jupiter:junit-jupiter:5.9.3")
