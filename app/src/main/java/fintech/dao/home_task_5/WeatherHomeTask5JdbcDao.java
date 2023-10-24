@@ -20,18 +20,56 @@ public class WeatherHomeTask5JdbcDao {
 
     private final DataSource dataSource;
 
+    private static final String SELECT_ALL_WEATHER_IN_CITY_QUERY = "SELECT city.id, weather.id, weather.weather_type_id, weather_type.name "
+            + "FROM weather "
+            + "JOIN city ON weather.city_id = city.id "
+            + "JOIN weather_type ON weather.weather_type_id = weather_type.id "
+            + "WHERE city.name = ?";
+
+    private static final String INSERT_WEATHER_QUERY = "INSERT INTO weather (city_id, weather_type_id) "
+            + "VALUES (?, ?)";
+
+    private static final String SELECT_WEATHER_TYPE_ID_BY_NAME_QUERY = "SELECT id "
+            + "FROM weather_type "
+            + "WHERE name = ?";
+
+    private static final String INSERT_WEATHER_TYPE_QUERY = "INSERT INTO weather_type (name) "
+            + "VALUES (?)";
+
+    private static final String SELECT_CITY_ID_BY_NAME_QUERY = "SELECT id "
+            + "FROM city "
+            + "WHERE name = ?";
+
+    private static final String INSERT_CITY_QUERY = "INSERT INTO city (name) "
+            + "VALUES (?)";
+
+    private static final String UPDATE_WEATHER_TYPE_IN_WEATHER_QUERY = "UPDATE weather "
+            + "SET weather_type_id = ? "
+            + "WHERE id = ?";
+
+    private static final String SELECT_LAST_WEATHER_ID_IN_CITY_QUERY = "SELECT id "
+            + "FROM weather "
+            + "WHERE city_id = ? "
+            + "ORDER BY id DESC LIMIT 1";
+
+    private static final String DELETE_ALL_WEATHER_BY_CITY_NAME_QUERY = "DELETE FROM weather "
+            + "WHERE city_id = "
+            + "(SELECT id FROM city WHERE name = ?)";
+
+    private static final String SELECT_WEATHER_AND_WEATHER_TYPE_BY_CITY_NAME_TO_DELETE_QUERY = "SELECT weather.id, city.id, "
+            + "weather_type.id, weather_type.name "
+            + "FROM city "
+            + "JOIN weather ON city.id = weather.city_id "
+            + "JOIN weather_type ON weather.weather_type_id = weather_type.id "
+            + "WHERE city.name = ?";
+
     public WeatherHomeTask5JdbcDao(@Qualifier("jdbcDataSource") DataSource dataSource) {
         this.dataSource = dataSource;
     }
 
     public List<Weather> getAllWeatherInCity(String cityName) {
         try (Connection connection = dataSource.getConnection()) {
-            String query = "SELECT city.id, weather.id, weather.weather_type_id, weather_type.name FROM weather "
-                    + "JOIN city ON weather.city_id = city.id "
-                    + "JOIN weather_type ON weather.weather_type_id = weather_type.id "
-                    + "WHERE city.name = ? ";
-
-            try (PreparedStatement statement = connection.prepareStatement(query)) {
+            try (PreparedStatement statement = connection.prepareStatement(SELECT_ALL_WEATHER_IN_CITY_QUERY)) {
                 statement.setString(1, cityName);
 
                 try (ResultSet rs = statement.executeQuery()) {
@@ -70,11 +108,10 @@ public class WeatherHomeTask5JdbcDao {
 
     private long insertWeather(Connection connection, int cityId,
             int weatherTypeId) throws SQLException {
-        String weatherQuery = "INSERT INTO weather (city_id, weather_type_id) VALUES (?, ?)";
         long weatherId;
 
         try (PreparedStatement weatherStatement = connection.prepareStatement(
-                weatherQuery, Statement.RETURN_GENERATED_KEYS)) {
+                INSERT_WEATHER_QUERY, Statement.RETURN_GENERATED_KEYS)) {
             weatherStatement.setInt(1, cityId);
             weatherStatement.setInt(2, weatherTypeId);
             weatherStatement.executeUpdate();
@@ -92,9 +129,9 @@ public class WeatherHomeTask5JdbcDao {
 
     private int tryInsertWeatherType(String weatherTypeName,
             Connection connection) throws SQLException {
-        String findWeatherTypeQuery = "SELECT id FROM weather_type WHERE name = ?";
-
-        try (PreparedStatement findWeatherTypeStatement = connection.prepareStatement(findWeatherTypeQuery)) {
+        try (
+                PreparedStatement findWeatherTypeStatement = connection
+                        .prepareStatement(SELECT_WEATHER_TYPE_ID_BY_NAME_QUERY)) {
             findWeatherTypeStatement.setString(1, weatherTypeName);
             try (ResultSet rs = findWeatherTypeStatement.executeQuery()) {
                 if (rs.next()) {
@@ -103,11 +140,10 @@ public class WeatherHomeTask5JdbcDao {
             }
         }
 
-        String weatherTypeQuery = "INSERT INTO weather_type (name) VALUES (?)";
         int weatherTypeId;
 
         try (PreparedStatement weatherTypeStatement = connection.prepareStatement(
-                weatherTypeQuery, Statement.RETURN_GENERATED_KEYS)) {
+                INSERT_WEATHER_TYPE_QUERY, Statement.RETURN_GENERATED_KEYS)) {
             weatherTypeStatement.setString(1, weatherTypeName);
             weatherTypeStatement.executeUpdate();
 
@@ -124,9 +160,7 @@ public class WeatherHomeTask5JdbcDao {
 
     private int tryInsertCity(String cityName, Connection connection)
             throws SQLException {
-        String findCityQuery = "SELECT id FROM city WHERE name = ?";
-
-        try (PreparedStatement findCityStatement = connection.prepareStatement(findCityQuery)) {
+        try (PreparedStatement findCityStatement = connection.prepareStatement(SELECT_CITY_ID_BY_NAME_QUERY)) {
             findCityStatement.setString(1, cityName);
             try (ResultSet rs = findCityStatement.executeQuery()) {
                 if (rs.next()) {
@@ -135,11 +169,10 @@ public class WeatherHomeTask5JdbcDao {
             }
         }
 
-        String cityQuery = "INSERT INTO city (name) VALUES (?)";
         int cityId;
 
         try (PreparedStatement cityStatement = connection.prepareStatement(
-                cityQuery, Statement.RETURN_GENERATED_KEYS)) {
+                INSERT_CITY_QUERY, Statement.RETURN_GENERATED_KEYS)) {
             cityStatement.setString(1, cityName);
             cityStatement.executeUpdate();
 
@@ -161,9 +194,8 @@ public class WeatherHomeTask5JdbcDao {
             int weatherTypeId = tryInsertWeatherType(weatherTypeName, connection);
             long affectedWeatherId = findLastWeatherIdInCity(connection, cityId);
 
-            String updateLastWeatherInCityQuery = "UPDATE weather SET weather_type_id = ? WHERE id = ?";
-            try (PreparedStatement updateLastWeatherInCityStatement = connection
-                    .prepareStatement(updateLastWeatherInCityQuery)) {
+            try (PreparedStatement updateLastWeatherInCityStatement = connection.prepareStatement(
+                    UPDATE_WEATHER_TYPE_IN_WEATHER_QUERY)) {
                 updateLastWeatherInCityStatement.setInt(1, weatherTypeId);
                 updateLastWeatherInCityStatement.setLong(2, affectedWeatherId);
                 updateLastWeatherInCityStatement.executeUpdate();
@@ -181,10 +213,10 @@ public class WeatherHomeTask5JdbcDao {
 
     private long findLastWeatherIdInCity(Connection connection, int cityId)
             throws SQLException {
-        String findLastWeatherInCityQuery = "SELECT id FROM weather WHERE city_id = ? ORDER BY id DESC LIMIT 1";
         long affectedWeatherId;
-        try (PreparedStatement findLastWeatherInCityStatement = connection
-                .prepareStatement(findLastWeatherInCityQuery)) {
+        try (
+                PreparedStatement findLastWeatherInCityStatement = connection
+                        .prepareStatement(SELECT_LAST_WEATHER_ID_IN_CITY_QUERY)) {
             findLastWeatherInCityStatement.setInt(1, cityId);
             try (ResultSet rs = findLastWeatherInCityStatement.executeQuery()) {
                 if (rs.next()) {
@@ -200,9 +232,8 @@ public class WeatherHomeTask5JdbcDao {
 
     private int tryFindCity(String cityName, Connection connection)
             throws SQLException {
-        String findCityQuery = "SELECT id FROM city WHERE name = ?";
         int cityId;
-        try (PreparedStatement findCityStatement = connection.prepareStatement(findCityQuery)) {
+        try (PreparedStatement findCityStatement = connection.prepareStatement(SELECT_CITY_ID_BY_NAME_QUERY)) {
             findCityStatement.setString(1, cityName);
             try (ResultSet rs = findCityStatement.executeQuery()) {
                 if (rs.next()) {
@@ -220,10 +251,8 @@ public class WeatherHomeTask5JdbcDao {
         try (Connection connection = dataSource.getConnection()) {
             List<Weather> toDelete = findWeatherToDelete(cityName, connection);
 
-            String removeAllWeatherInCityQuery = "DELETE FROM weather "
-                    + "WHERE city_id = (SELECT id FROM city WHERE name = ?)";
-            try (PreparedStatement removeAllWeatherInCityStatement = connection
-                    .prepareStatement(removeAllWeatherInCityQuery)) {
+            try (PreparedStatement removeAllWeatherInCityStatement = connection.prepareStatement(
+                    DELETE_ALL_WEATHER_BY_CITY_NAME_QUERY)) {
                 removeAllWeatherInCityStatement.setString(1, cityName);
                 int deletedCount = removeAllWeatherInCityStatement.executeUpdate();
                 if (deletedCount >= 1) {
@@ -240,13 +269,9 @@ public class WeatherHomeTask5JdbcDao {
     private List<Weather> findWeatherToDelete(String cityName,
             Connection connection)
             throws SQLException {
-        String findDeletedWeatherQuery = "SELECT weather.id, city.id, "
-                + "weather_type.id, weather_type.name "
-                + "FROM city "
-                + "JOIN weather ON city.id = weather.city_id "
-                + "JOIN weather_type ON weather.weather_type_id = weather_type.id "
-                + "WHERE city.name = ?";
-        try (PreparedStatement findDeletedWeatherStatement = connection.prepareStatement(findDeletedWeatherQuery)) {
+        try (
+                PreparedStatement findDeletedWeatherStatement = connection.prepareStatement(
+                        SELECT_WEATHER_AND_WEATHER_TYPE_BY_CITY_NAME_TO_DELETE_QUERY)) {
             findDeletedWeatherStatement.setString(1, cityName);
             try (ResultSet rs = findDeletedWeatherStatement.executeQuery()) {
                 List<Weather> result = new ArrayList<>();

@@ -16,12 +16,13 @@ public class WeatherJdbcDao {
 
     private final DataSource dataSource;
 
+    private static final String INSERT_QUERY = "INSERT INTO weather "
+            + "(weather_type) VALUES (?)";
+
     public Weather save(Weather weather) {
-        String insertQuery = "INSERT INTO weather "
-                + "(weather_type) VALUES (?)";
         try (Connection connection = dataSource.getConnection();
                 PreparedStatement statement = connection.prepareStatement(
-                        insertQuery, Statement.RETURN_GENERATED_KEYS)) {
+                        INSERT_QUERY, Statement.RETURN_GENERATED_KEYS)) {
             statement.setString(1, weather.getType());
             if (statement.executeUpdate() > 0) {
                 try (ResultSet ids = statement.getGeneratedKeys()) {
