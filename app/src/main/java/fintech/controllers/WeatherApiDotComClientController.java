@@ -1,9 +1,14 @@
 package fintech.controllers;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import fintech.config.WeatherApiDotComProperties;
+import fintech.dao.home_task_6.WeatherJdbcDao;
 import fintech.dto.WeatherApiDotComErrorMessageDto;
 import fintech.exceptions.web_client.WebClientBaseException;
 import fintech.exceptions.web_client.factory.WebClientExceptionFactory;
+import fintech.models.home_task_6.Weather;
 import io.github.resilience4j.ratelimiter.RateLimiter;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
@@ -14,6 +19,8 @@ import java.util.function.Function;
 import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.http.MediaType;
+import org.springframework.transaction.annotation.Isolation;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -34,6 +41,8 @@ public class WeatherApiDotComClientController {
     @Qualifier("standardWebApiDotComClientRateLimiter")
     private final RateLimiter rateLimiter;
 
+    private final WeatherJdbcDao weatherDao;
+
     @Operation(summary = "Get current weather by city name")
     @ApiResponses({
             @ApiResponse(responseCode = "200", description = "Found the weather", content = {
@@ -45,9 +54,10 @@ public class WeatherApiDotComClientController {
             @ApiResponse(responseCode = "500", description = "Unknown or some internal error occurred")
     })
     @GetMapping("/now/{city}")
-    public Mono<Object> getCurrentWeatherForCity(
+    @Transactional(isolation = Isolation.REPEATABLE_READ)
+    public Mono<String> getCurrentWeatherForCity(
             @Parameter(description = "The city to get weather for") @PathVariable("city") String city) {
-        Function<String, Mono<Object>> function = innerCity -> client.get()
+        Function<String, Mono<String>> function = innerCity -> client.get()
                 .uri(uriBuilder -> uriBuilder.queryParam("key", props.getAuthKey())
                         .queryParam("q", innerCity)
                         .build())
@@ -67,8 +77,24 @@ public class WeatherApiDotComClientController {
                             WebClientBaseException exception = exceptionFactory.getException(errorCode, errorMessage);
                             return Mono.error(exception);
                         })
-                .bodyToMono(Object.class);
-        Function<String, Mono<Object>> rateLimitedFunction = RateLimiter.decorateFunction(rateLimiter, function);
-        return rateLimitedFunction.apply(city);
+                .bodyToMono(String.class);
+        Function<String, Mono<String>> rateLimitedFunction = RateLimiter.decorateFunction(rateLimiter, function);
+
+        Mono<String> mono = rateLimitedFunction.apply(city);
+
+        Weather weather = mono.map(jsonString -> {
+            try {
+                ObjectMapper mapper = new ObjectMapper();
+                JsonNode node = mapper.readTree(jsonString);
+                String weatherType = node.get("current").get("condition").get("text").asText();
+                return new Weather(null, weatherType);
+            } catch (JsonProcessingException e) {
+                throw new RuntimeException("Error while parsing JSON", e);
+            }
+        })
+                .block();
+        weatherDao.save(weather);
+
+        return mono;
     }
 }
